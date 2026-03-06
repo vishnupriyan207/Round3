@@ -1,0 +1,1184 @@
+this below 
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CARE+ Hospital – Administrative Analytics Dashboard</title>
+
+    <!-- Fonts + Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <style>
+      :root {
+        --bg1: #f6f4ff;
+        --bg2: #eef6ff;
+        --bg3: #fff7e8;
+        --card: rgba(255, 255, 255, 0.72);
+        --stroke: rgba(15, 23, 42, 0.08);
+        --text: #0f172a;
+        --muted: rgba(15, 23, 42, 0.62);
+        --shadow: 0 18px 45px rgba(31, 41, 55, 0.14);
+        --shadow-soft: 0 10px 30px rgba(31, 41, 55, 0.1);
+        --radius-xl: 26px;
+        --radius-lg: 18px;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(1200px 600px at 15% 10%, #efeaff 0%, transparent 60%),
+          radial-gradient(900px 520px at 80% 20%, #e8f2ff 0%, transparent 60%),
+          radial-gradient(1100px 650px at 60% 90%, #fff2db 0%, transparent 55%),
+          linear-gradient(135deg, var(--bg1), var(--bg2) 45%, var(--bg3));
+        overflow-x: hidden;
+      }
+
+      .app { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+
+      /* Sidebar */
+      .sidebar {
+        position: sticky; top: 0; height: 100vh;
+        padding: 22px 18px;
+        backdrop-filter: blur(18px);
+        background: rgba(255, 255, 255, 0.55);
+        border-right: 1px solid var(--stroke);
+      }
+
+      .brand {
+        display: flex; align-items: center; gap: 10px;
+        padding: 14px;
+        border-radius: var(--radius-lg);
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.14), rgba(59, 130, 246, 0.10));
+        border: 1px solid rgba(124, 58, 237, 0.16);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .logo {
+        width: 42px; height: 42px; border-radius: 14px;
+        display: grid; place-items: center;
+        background: linear-gradient(135deg, rgba(124,58,237,0.95), rgba(59,130,246,0.95));
+        color: #fff;
+        box-shadow: 0 12px 24px rgba(124, 58, 237, 0.25);
+      }
+
+      .brand-text { display: flex; flex-direction: column; line-height: 1.1; }
+      .brand-text strong { font-size: 14px; letter-spacing: 0.2px; }
+      .brand-text span { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+      .nav { margin-top: 18px; display: flex; flex-direction: column; gap: 6px; }
+      .nav a {
+        display: flex; align-items: center; gap: 12px;
+        padding: 12px;
+        border-radius: 14px;
+        color: rgba(15, 23, 42, 0.8);
+        border: 1px solid transparent;
+        transition: transform 0.16s ease, background 0.16s ease, border 0.16s ease;
+        text-decoration: none;
+      }
+      .nav a i { width: 20px; text-align: center; color: rgba(124, 58, 237, 0.92); }
+      .nav a:hover { background: rgba(255,255,255,0.65); border: 1px solid var(--stroke); transform: translateY(-1px); }
+      .nav a.active {
+        background: linear-gradient(135deg, rgba(124,58,237,0.16), rgba(59,130,246,0.12));
+        border: 1px solid rgba(124,58,237,0.18);
+      }
+
+      .sidebar-footer {
+        position: absolute; left: 18px; right: 18px; bottom: 18px;
+        padding: 12px;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--stroke);
+        background: rgba(255,255,255,0.62);
+      }
+      .hint { font-size: 12px; color: var(--muted); line-height: 1.35; }
+
+      /* Main */
+      .main { padding: 22px; }
+
+      .topbar {
+        display: flex; align-items: center; justify-content: space-between; gap: 14px;
+        padding: 18px;
+        border-radius: var(--radius-xl);
+        background: rgba(255,255,255,0.66);
+        border: 1px solid var(--stroke);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+      .burger {
+        display: none;
+        border: 1px solid var(--stroke);
+        background: rgba(255,255,255,0.65);
+        width: 42px; height: 42px; border-radius: 14px;
+        cursor: pointer;
+        box-shadow: 0 10px 22px rgba(31, 41, 55, 0.10);
+      }
+
+      .titles h1 { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: 0.1px; }
+      .titles p { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); }
+
+      .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+      .chip {
+        display: flex; align-items: center; gap: 8px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--stroke);
+        background: rgba(255,255,255,0.68);
+        font-size: 12.5px;
+        color: rgba(15,23,42,0.75);
+        white-space: nowrap;
+      }
+      .chip i { color: rgba(59,130,246,0.95); }
+
+      .avatar {
+        width: 42px; height: 42px; border-radius: 16px;
+        border: 1px solid var(--stroke);
+        background: linear-gradient(135deg, rgba(245,158,11,0.18), rgba(124,58,237,0.18));
+        display: grid; place-items: center;
+        box-shadow: 0 10px 26px rgba(31,41,55,0.12);
+      }
+      .avatar span { font-weight: 800; color: rgba(15,23,42,0.78); font-size: 13px; }
+
+      /* Dashboard Grid */
+      .grid {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 14px;
+      }
+
+      .card {
+        border-radius: var(--radius-xl);
+        border: 1px solid var(--stroke);
+        background: var(--card);
+        box-shadow: var(--shadow-soft);
+        padding: 16px;
+        backdrop-filter: blur(18px);
+      }
+
+      .card-header {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        margin-bottom: 10px;
+      }
+
+      .card-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+      .icon {
+        width: 38px; height: 38px; border-radius: 14px;
+        display: grid; place-items: center;
+        color: white;
+        box-shadow: 0 14px 28px rgba(31,41,55,0.14);
+      }
+
+      .card-title h3 { margin: 0; font-size: 13px; color: rgba(15,23,42,0.78); font-weight: 700; }
+      .card-title p { margin: 3px 0 0; font-size: 12px; color: var(--muted); }
+
+      /* Stat cards */
+      .stat {
+        display: flex; flex-direction: column; gap: 10px;
+        padding: 18px;
+        border-radius: var(--radius-xl);
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        min-height: 118px;
+      }
+      .stat::after {
+        content: "";
+        position: absolute;
+        right: -70px; top: -70px;
+        width: 180px; height: 180px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.18);
+      }
+      .stat-top { display: flex; align-items: center; justify-content: space-between; z-index: 1; }
+      .stat-top i {
+        width: 40px; height: 40px; border-radius: 16px;
+        background: rgba(255,255,255,0.18);
+        display: grid; place-items: center;
+      }
+      .label { font-size: 13px; opacity: 0.92; font-weight: 700; }
+      .value { font-size: 28px; font-weight: 900; z-index: 1; }
+      .sub { font-size: 12px; opacity: 0.9; z-index: 1; }
+
+      .g-purple { background: linear-gradient(135deg, rgba(124,58,237,0.95), rgba(236,72,153,0.86)); }
+      .g-blue { background: linear-gradient(135deg, rgba(59,130,246,0.95), rgba(6,182,212,0.86)); }
+      .g-yellow { background: linear-gradient(135deg, rgba(245,158,11,0.95), rgba(250,204,21,0.88)); }
+      .g-green { background: linear-gradient(135deg, rgba(34,197,94,0.95), rgba(16,185,129,0.88)); }
+
+      .span-3 { grid-column: span 3; }
+      .span-4 { grid-column: span 4; }
+      .span-5 { grid-column: span 5; }
+      .span-7 { grid-column: span 7; }
+      .span-8 { grid-column: span 8; }
+      .span-12 { grid-column: span 12; }
+
+      .chart-wrap { height: 280px; }
+      .chart-wrap.tall { height: 320px; }
+      canvas { width: 100% !important; height: 100% !important; }
+
+      /* Insight cards */
+      .insight {
+        margin-top: 12px;
+        padding: 14px;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--stroke);
+        background: rgba(255,255,255,0.70);
+        box-shadow: 0 12px 28px rgba(31,41,55,0.10);
+      }
+      .headline {
+        display: flex; align-items: center; gap: 10px;
+        font-weight: 800; font-size: 13px;
+        color: rgba(15,23,42,0.86);
+        margin-bottom: 6px;
+      }
+      .headline i { color: rgba(245,158,11,0.95); }
+      .insight p { margin: 0; font-size: 12.5px; color: rgba(15,23,42,0.72); line-height: 1.45; }
+
+      /* Stress */
+      .stress-meta { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 6px; }
+      .big { font-size: 28px; font-weight: 900; }
+      .stress-badge {
+        padding: 7px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--stroke);
+        background: rgba(255,255,255,0.70);
+        font-size: 12px;
+        font-weight: 900;
+      }
+      .bar {
+        margin-top: 12px;
+        height: 14px;
+        border-radius: 999px;
+        background: rgba(15,23,42,0.08);
+        overflow: hidden;
+        border: 1px solid rgba(15,23,42,0.06);
+      }
+      .bar > span { display: block; height: 100%; width: 0%; border-radius: 999px; transition: width 0.6s ease; }
+      .legend { margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap; }
+      .key { display: flex; align-items: center; gap: 7px; font-size: 12px; color: rgba(15,23,42,0.68); }
+      .dot { width: 10px; height: 10px; border-radius: 999px; }
+
+      /* Heatmap */
+      .heatmap { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 12px; }
+      .heat {
+        border-radius: 16px;
+        padding: 12px;
+        border: 1px solid var(--stroke);
+        background: rgba(255,255,255,0.68);
+        box-shadow: 0 10px 24px rgba(31,41,55,0.10);
+        position: relative;
+        overflow: hidden;
+      }
+      .heat::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(700px 150px at 20% 0%, rgba(255,255,255,0.38), transparent 55%);
+        pointer-events: none;
+      }
+      .heat .name { font-weight: 900; font-size: 13px; margin: 0 0 6px; }
+      .heat .tag {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 12px; font-weight: 900;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(15,23,42,0.08);
+        background: rgba(255,255,255,0.70);
+        color: rgba(15,23,42,0.78);
+      }
+      .heat.overworked { background: linear-gradient(135deg, rgba(239,68,68,0.18), rgba(255,255,255,0.60)); border-color: rgba(239,68,68,0.22); }
+      .heat.balanced { background: linear-gradient(135deg, rgba(34,197,94,0.16), rgba(255,255,255,0.60)); border-color: rgba(34,197,94,0.22); }
+      .heat.low { background: linear-gradient(135deg, rgba(59,130,246,0.16), rgba(255,255,255,0.60)); border-color: rgba(59,130,246,0.22); }
+
+      /* Report */
+      .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+      .kv {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        border: 1px solid var(--stroke);
+        background: rgba(255,255,255,0.66);
+      }
+      .kv span { font-size: 12.5px; color: rgba(15,23,42,0.72); }
+      .kv strong { font-size: 13px; }
+
+      .btn {
+        margin-top: 12px;
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(124,58,237,0.22);
+        background: linear-gradient(135deg, rgba(124,58,237,0.92), rgba(59,130,246,0.92));
+        color: #fff;
+        font-weight: 900;
+        letter-spacing: 0.2px;
+        cursor: pointer;
+        box-shadow: 0 18px 34px rgba(124,58,237,0.22);
+        transition: transform 0.15s ease, filter 0.15s ease;
+      }
+      .btn:hover { transform: translateY(-1px); filter: brightness(1.03); }
+
+      .toast {
+        position: fixed;
+        right: 18px; bottom: 18px;
+        max-width: 380px;
+        padding: 12px 14px;
+        border-radius: 18px;
+        border: 1px solid var(--stroke);
+        background: rgba(255,255,255,0.78);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+        display: none;
+        align-items: flex-start;
+        gap: 10px;
+        z-index: 50;
+      }
+      .toast i { margin-top: 2px; color: rgba(34,197,94,0.95); }
+      .t-title { font-weight: 900; font-size: 13px; margin: 0 0 4px; }
+      .t-body { margin: 0; font-size: 12.5px; color: rgba(15,23,42,0.72); line-height: 1.35; }
+
+      /* Responsive */
+      @media (max-width: 1100px) {
+        .span-3 { grid-column: span 6; }
+        .span-4 { grid-column: span 6; }
+        .span-5, .span-7, .span-8 { grid-column: span 12; }
+        .heatmap { grid-template-columns: repeat(2, 1fr); }
+        .chart-wrap { height: 300px; }
+      }
+
+      @media (max-width: 860px) {
+        .app { grid-template-columns: 1fr; }
+        .sidebar {
+          position: fixed; z-index: 40;
+          left: 14px; right: 14px; top: 14px;
+          height: auto; max-height: calc(100vh - 28px);
+          border-radius: var(--radius-xl);
+          transform: translateY(-120%);
+          transition: transform 0.22s ease;
+          box-shadow: var(--shadow);
+        }
+        .sidebar.open { transform: translateY(0); }
+        .sidebar-footer { position: static; margin-top: 12px; }
+        .burger { display: inline-grid; place-items: center; }
+        .main { padding: 14px; }
+        .report-grid { grid-template-columns: 1fr; }
+        .chip { display: none; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="app">
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"><i class="fa-solid fa-heart-pulse"></i></div>
+          <div class="brand-text">
+            <strong>CARE+ Hospital</strong>
+            <span>Admin Analytics</span>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="Sidebar Menu">
+          <a class="active" href="#dashboard"><i class="fa-solid fa-grid-2"></i>Dashboard</a>
+          <a href="#patients"><i class="fa-solid fa-bed-pulse"></i>Patients</a>
+          <a href="#staff"><i class="fa-solid fa-user-nurse"></i>Staff</a>
+          <a href="#departments"><i class="fa-solid fa-building"></i>Departments</a>
+          <a href="#analytics"><i class="fa-solid fa-chart-line"></i>Analytics</a>
+          <a href="#reports"><i class="fa-solid fa-file-lines"></i>Reports</a>
+          <a href="#settings"><i class="fa-solid fa-gear"></i>Settings</a>
+          <a href="#logout"><i class="fa-solid fa-arrow-right-from-bracket"></i>Logout</a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="hint">
+            Tip: Use insights to rebalance nurse workloads and reduce pending requests during peak hours.
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="main" id="dashboard">
+        <header class="topbar">
+          <div class="topbar-left">
+            <button class="burger" id="burger" aria-label="Toggle sidebar">
+              <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="titles">
+              <h1>CARE+ Hospital</h1>
+              <p>Administrative Dashboard</p>
+            </div>
+          </div>
+
+          <div class="topbar-right">
+            <div class="chip" title="Live admin view (demo)">
+              <i class="fa-solid fa-sparkles"></i>
+              AI-ready Analytics
+            </div>
+            <div class="avatar" title="Admin Profile"><span>AD</span></div>
+          </div>
+        </header>
+
+        <section class="grid" aria-label="CARE+ Hospital Analytics Dashboard">
+          <!-- Top Stats -->
+          <div class="stat g-purple span-3">
+            <div class="stat-top">
+              <div class="label">Total Patients</div>
+              <i class="fa-solid fa-hospital-user" aria-hidden="true"></i>
+            </div>
+            <div class="value">240</div>
+            <div class="sub">Current active patients tracked</div>
+          </div>
+
+          <div class="stat g-blue span-3">
+            <div class="stat-top">
+              <div class="label">Resolved Requests</div>
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            </div>
+            <div class="value">200</div>
+            <div class="sub">Successfully handled today</div>
+          </div>
+
+          <div class="stat g-yellow span-3">
+            <div class="stat-top">
+              <div class="label">Pending Requests</div>
+              <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+            </div>
+            <div class="value">40</div>
+            <div class="sub">Needs attention (queue)</div>
+          </div>
+
+          <div class="stat g-green span-3">
+            <div class="stat-top">
+              <div class="label">Available Staff</div>
+              <i class="fa-solid fa-user-nurse" aria-hidden="true"></i>
+            </div>
+            <div class="value" id="availableStaffStat">46</div>
+            <div class="sub">Active nurses & doctors</div>
+          </div>
+
+          <!-- Chart 1 -->
+          <section class="card span-8" id="staff" aria-label="Staff Workload Distribution">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="icon" style="background: linear-gradient(135deg, rgba(124,58,237,0.95), rgba(59,130,246,0.95));">
+                  <i class="fa-solid fa-chart-column"></i>
+                </div>
+                <div>
+                  <h3>Staff Workload Distribution</h3>
+                  <p>Patient requests handled by each nurse</p>
+                </div>
+              </div>
+              <div class="chip">
+                <i class="fa-solid fa-user-group"></i>
+                Nurses: <span id="nurseCountChip"></span>
+              </div>
+            </div>
+            <div class="chart-wrap tall">
+              <canvas id="workloadBar" aria-label="Workload Bar Chart" role="img"></canvas>
+            </div>
+
+            <div class="insight" aria-label="AI Insight Card below chart">
+              <div class="headline">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                ⚠️ Workload imbalance detected
+              </div>
+              <p><strong>Suggestion:</strong> Assign more requests to <strong>Revathi</strong> and <strong>Nithya</strong>.</p>
+            </div>
+          </section>
+
+          <!-- AI Insights Panel -->
+          <section class="card span-4" aria-label="AI Hospital Insights">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="icon" style="background: linear-gradient(135deg, rgba(245,158,11,0.95), rgba(124,58,237,0.95));">
+                  <i class="fa-solid fa-robot"></i>
+                </div>
+                <div>
+                  <h3>AI Hospital Insights</h3>
+                  <p>Quick, actionable system signals</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="insight" style="margin-top: 0;">
+              <div class="headline"><i class="fa-solid fa-sparkles"></i><span>AI Messages</span></div>
+              <p id="aiImbalanceMsg"></p>
+              <p id="aiBestDeptMsg" style="margin-top: 8px;"></p>
+              <p id="aiLowEffDeptMsg" style="margin-top: 8px;"></p>
+            </div>
+
+            <div class="insight">
+              <div class="headline"><i class="fa-solid fa-shield-heart"></i>Status</div>
+              <p><strong>Queue:</strong> <span id="aiPendingCount">40</span> pending requests</p>
+              <p style="margin-top: 8px;">
+                <strong>Staff:</strong>
+                <span id="aiStaffNurses"></span> nurses,
+                <span id="aiStaffDoctors"></span> doctors
+              </p>
+              <ul id="alertList" style="margin-top:8px;padding-left:18px;font-size:12.5px;color:rgba(15,23,42,0.78);"></ul>
+            </div>
+          </section>
+
+          <!-- Chart 2 -->
+          <section class="card span-4" id="patients" aria-label="Hospital Population Overview">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="icon" style="background: linear-gradient(135deg, rgba(59,130,246,0.95), rgba(6,182,212,0.95));">
+                  <i class="fa-solid fa-chart-pie"></i>
+                </div>
+                <div>
+                  <h3>Hospital Population Overview</h3>
+                  <p>Patients vs Staff</p>
+                </div>
+              </div>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="populationPie" aria-label="Population Pie Chart" role="img"></canvas>
+            </div>
+          </section>
+
+          <!-- Chart 3 -->
+          <section class="card span-4" id="departments" aria-label="Department Performance Score">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="icon" style="background: linear-gradient(135deg, rgba(34,197,94,0.95), rgba(59,130,246,0.95));">
+                  <i class="fa-solid fa-chart-simple"></i>
+                </div>
+                <div>
+                  <h3>Department Workload & Bed Occupancy</h3>
+                  <p>Patients per doctor (DW) & Bed Occupancy Rate (BOR)</p>
+                </div>
+              </div>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="deptBar" aria-label="Department Workload and Bed Occupancy Chart" role="img"></canvas>
+            </div>
+          </section>
+
+          <!-- Chart 4 (Progress/Gauge) -->
+          <section class="card span-4" id="analytics" aria-label="Hospital Stress Index">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="icon" style="background: linear-gradient(135deg, rgba(239,68,68,0.95), rgba(245,158,11,0.95));">
+                  <i class="fa-solid fa-gauge-high"></i>
+                </div>
+                <div>
+                  <h3>Hospital Stress Index</h3>
+                  <p>(Pending + Emergency) / Available Staff</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="stress-meta">
+              <div>
+                <div style="font-size:12.5px;color:rgba(15,23,42,0.68);font-weight:900;">Stress Index</div>
+                <div class="big" id="stressValue">6</div>
+              </div>
+              <div class="stress-badge" id="stressBadge">HIGH</div>
+            </div>
+
+            <div class="bar" aria-label="Stress Level Progress"><span id="stressBar"></span></div>
+
+            <div class="legend" aria-label="Stress Level Legend">
+              <div class="key"><span class="dot" style="background: rgba(34,197,94,0.95);"></span>Green → Low</div>
+              <div class="key"><span class="dot" style="background: rgba(245,158,11,0.95);"></span>Yellow → Moderate</div>
+              <div class="key"><span class="dot" style="background: rgba(239,68,68,0.95);"></span>Red → High</div>
+            </div>
+
+            <div class="insight">
+              <div class="headline"><i class="fa-solid fa-triangle-exclamation"></i>Hospital Stress Level → <span id="stressLabel">HIGH</span></div>
+              <p>
+                <strong>Pending:</strong> <span id="pendingCountText">40</span>,
+                <strong>Emergency:</strong> <span id="emergencyCountText">20</span>,
+                <strong>Staff:</strong> <span id="availableStaffText"></span>
+                → Stress Index = <strong><span id="stressIndexText"></span></strong>
+              </p>
+              <p style="margin-top:6px;">
+                <strong>Average Waiting Time:</strong>
+                <span id="avgWaitText"></span>
+              </p>
+            </div>
+          </section>
+
+          <!-- Chart 5 -->
+          <section class="card span-7" aria-label="Predicted Patient Requests">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="icon" style="background: linear-gradient(135deg, rgba(124,58,237,0.95), rgba(245,158,11,0.95));">
+                  <i class="fa-solid fa-wave-square"></i>
+                </div>
+                <div>
+                  <h3>Patient Inflow – Last 3 Days & Prediction</h3>
+                  <p>Daily patients with simple moving-average forecast</p>
+                </div>
+              </div>
+              <div class="chip"><i class="fa-solid fa-brain"></i>AI Forecast</div>
+            </div>
+
+            <div class="chart-wrap tall">
+              <canvas id="predictLine" aria-label="Prediction Line Graph" role="img"></canvas>
+            </div>
+
+            <div class="insight">
+              <div class="headline"><i class="fa-solid fa-sparkles"></i>AI Prediction</div>
+              <p><strong>Predicted patients tomorrow → <span id="predictedPatientsText"></span></strong></p>
+              <p style="margin-top: 6px;">Based on last 3 days average volume.</p>
+            </div>
+          </section>
+
+          <!-- Heatmap -->
+          <section class="card span-5" aria-label="Staff Burnout Heatmap">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="icon" style="background: linear-gradient(135deg, rgba(59,130,246,0.95), rgba(34,197,94,0.95));">
+                  <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+                <div>
+                  <h3>Staff Burnout Heatmap</h3>
+                  <p>Red → Overworked, Green → Balanced, Blue → Low workload</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="heatmap" id="heatmapGrid"></div>
+
+            <div class="insight">
+              <div class="headline"><i class="fa-solid fa-triangle-exclamation"></i>⚠️ Burnout Risk Detected for Kavitha</div>
+              <p><strong>Recommendation:</strong> Reduce workload.</p>
+            </div>
+          </section>
+
+          <!-- Auto Report Generator -->
+          <section class="card span-12" id="reports" aria-label="Auto Report Generator">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="icon" style="background: linear-gradient(135deg, rgba(245,158,11,0.95), rgba(59,130,246,0.95));">
+                  <i class="fa-solid fa-file-waveform"></i>
+                </div>
+                <div>
+                  <h3>Hospital Activity Report – March 6</h3>
+                  <p>Auto summary for administrative review</p>
+                </div>
+              </div>
+              <div class="chip"><i class="fa-solid fa-calendar-day"></i>Mar 6</div>
+            </div>
+
+            <div class="report-grid">
+              <div class="kv"><span>Total Requests</span><strong>240</strong></div>
+              <div class="kv"><span>Resolved</span><strong>200</strong></div>
+              <div class="kv"><span>Pending</span><strong>40</strong></div>
+              <div class="kv"><span>Peak Time</span><strong>11 AM</strong></div>
+              <div class="kv"><span>Best Department</span><strong>Emergency</strong></div>
+              <div class="kv"><span>Lowest Efficiency</span><strong>Pharmacy</strong></div>
+            </div>
+
+            <button class="btn" id="generateReport">
+              <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true" style="margin-right: 8px;"></i>
+              Generate Report
+            </button>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">
+      <i class="fa-solid fa-circle-check"></i>
+      <div>
+        <p class="t-title" id="toastTitle">Report generated</p>
+        <p class="t-body" id="toastBody">Downloaded: CARE+_Hospital_Report_March_6.txt</p>
+      </div>
+    </div>
+
+    <script>
+      // --- Core sample data (nurses + departments) ---
+      // 15 nurses with varied workloads
+      const nurses = [
+        "Kavitha","Revathi","Meena","Anitha","Priya",
+        "Divya","Lakshmi","Deepa","Nithya","Swathi",
+        "Sangeetha","Bhavani","Uma","Janani","Monika"
+      ];
+      const workload = [
+        25, 5, 18, 12, 22,
+        9, 15, 11, 7, 14,
+        19, 8, 16, 10, 21
+      ];
+
+      const patients = 240; // total active patients in hospital
+      const staff = nurses.length; // for simple Patients vs Staff pie
+
+      // Department‑level operational data (from HMS)
+      const departments = [
+        { name: "Emergency",        patients: 60, doctors: 3, totalBeds: 20, occupiedBeds: 18, avgWaitMins: 26 },
+        { name: "General Medicine", patients: 30, doctors: 5, totalBeds: 25, occupiedBeds: 12, avgWaitMins: 18 },
+        { name: "Orthopedics",      patients: 25, doctors: 4, totalBeds: 15, occupiedBeds: 10, avgWaitMins: 22 }
+      ];
+
+      // --- Derived metrics for departments (Steps 2–7) ---
+      const deptLabels = departments.map((d) => d.name);
+      const deptPatients = departments.map((d) => d.patients);
+      const deptDoctors = departments.map((d) => d.doctors);
+      const deptWorkload = departments.map((d) => d.patients / d.doctors); // DW = Patients / Doctors
+      const deptBedOcc = departments.map((d) => (d.occupiedBeds / d.totalBeds) * 100); // BOR %
+
+      const totalDoctors = deptDoctors.reduce((sum, v) => sum + v, 0);
+      const totalDeptWorkload = deptWorkload.reduce((sum, v) => sum + v, 0);
+      const avgWorkload = totalDeptWorkload / departments.length; // AW
+
+      const deptImbalance = deptWorkload.map((dw) => dw - avgWorkload); // IS = DW - AW
+
+      function requiredDoctorsForDept(dept, aw) {
+        // RD = Patients / Average Workload
+        return dept.patients / aw;
+      }
+
+      const deptRequiredDoctors = departments.map((d) => requiredDoctorsForDept(d, avgWorkload));
+      const deptDoctorsNeeded = departments.map((d, idx) => {
+        const rd = deptRequiredDoctors[idx];
+        return Math.max(0, Math.round(rd) - d.doctors);
+      });
+
+      // Waiting time analysis (Step 8)
+      const totalPatientsInDepts = deptPatients.reduce((sum, v) => sum + v, 0);
+      const weightedWaitSum = departments.reduce(
+        (sum, d) => sum + d.avgWaitMins * d.patients,
+        0
+      );
+      const hospitalAvgWait = weightedWaitSum / totalPatientsInDepts; // AWT
+
+      // Queue + stress index (Step 10 logic integrated)
+      const pendingRequests = 40;
+      const emergencyRequests = 20;
+      const availableStaff = nurses.length + totalDoctors;
+      const stressIndex = (pendingRequests + emergencyRequests) / availableStaff;
+
+      // Simple historical patient inflow (Step 9)
+      const historyDays = [
+        { label: "Mon", patients: 50 },
+        { label: "Tue", patients: 55 },
+        { label: "Wed", patients: 60 }
+      ];
+      const historyTotal = historyDays.reduce((sum, d) => sum + d.patients, 0);
+      const predictedPatients = historyTotal / historyDays.length;
+      const predictLabels = [...historyDays.map((d) => d.label), "Tomorrow"];
+      const predictValues = [...historyDays.map((d) => d.patients), predictedPatients];
+
+      // --- Sidebar (mobile) ---
+      const sidebar = document.getElementById("sidebar");
+      document.getElementById("burger")?.addEventListener("click", () => sidebar.classList.toggle("open"));
+      document.querySelectorAll(".nav a").forEach((a) => {
+        a.addEventListener("click", () => {
+          if (window.matchMedia("(max-width: 860px)").matches) sidebar.classList.remove("open");
+        });
+      });
+
+      // --- Toast ---
+      const toastEl = document.getElementById("toast");
+      const toastTitle = document.getElementById("toastTitle");
+      const toastBody = document.getElementById("toastBody");
+      function showToast(title, body) {
+        toastTitle.textContent = title;
+        toastBody.textContent = body;
+        toastEl.style.display = "flex";
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => (toastEl.style.display = "none"), 3200);
+      }
+
+      // --- Stress Index UI ---
+      function stressLevelFromIndex(x) {
+        if (x < 3) return { label: "LOW", color: "linear-gradient(90deg, rgba(34,197,94,0.95), rgba(16,185,129,0.95))" };
+        if (x < 5) return { label: "MODERATE", color: "linear-gradient(90deg, rgba(245,158,11,0.95), rgba(250,204,21,0.95))" };
+        return { label: "HIGH", color: "linear-gradient(90deg, rgba(239,68,68,0.95), rgba(245,158,11,0.90))" };
+      }
+      const stressInfo = stressLevelFromIndex(stressIndex);
+      document.getElementById("stressValue").textContent = String(stressIndex);
+      document.getElementById("stressBadge").textContent = stressInfo.label;
+      document.getElementById("stressLabel").textContent = stressInfo.label;
+      const stressBar = document.getElementById("stressBar");
+      stressBar.style.background = stressInfo.color;
+
+      // map to % bar (treat 8 as "maxed" for UI)
+      const stressPercent = Math.min(100, Math.round((stressIndex / 8) * 100));
+      requestAnimationFrame(() => (stressBar.style.width = stressPercent + "%"));
+
+      // Populate stress + waiting time details
+      document.getElementById("pendingCountText").textContent = String(pendingRequests);
+      document.getElementById("emergencyCountText").textContent = String(emergencyRequests);
+      document.getElementById("availableStaffText").textContent = String(availableStaff);
+      document.getElementById("stressIndexText").textContent = stressIndex.toFixed(2);
+      document.getElementById("avgWaitText").textContent = hospitalAvgWait.toFixed(1) + " minutes";
+
+      // --- Chart.js theme ---
+      Chart.defaults.font.family = "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
+      Chart.defaults.color = "rgba(15,23,42,0.70)";
+
+      function makeGradient(ctx, area, stops) {
+        const g = ctx.createLinearGradient(area.left, area.top, area.right, area.bottom);
+        stops.forEach(([p, c]) => g.addColorStop(p, c));
+        return g;
+      }
+
+      // Chart 1 — Staff Workload Distribution (Bar)
+      const workloadCtx = document.getElementById("workloadBar").getContext("2d");
+      new Chart(workloadCtx, {
+        type: "bar",
+        data: {
+          labels: nurses,
+          datasets: [{
+            label: "Requests Handled",
+            data: workload,
+            borderWidth: 0,
+            borderRadius: 12,
+            maxBarThickness: 38,
+            backgroundColor: (context) => {
+              const { chart } = context;
+              const { ctx, chartArea } = chart;
+              if (!chartArea) return "rgba(124,58,237,0.55)";
+              return makeGradient(ctx, chartArea, [
+                [0, "rgba(124,58,237,0.95)"],
+                [0.55, "rgba(59,130,246,0.90)"],
+                [1, "rgba(6,182,212,0.85)"],
+              ]);
+            },
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx) => ` ${ctx.parsed.y} requests` } },
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true } },
+            y: { beginAtZero: true, grid: { color: "rgba(15,23,42,0.08)" }, ticks: { stepSize: 5 } },
+          },
+        },
+      });
+
+      // Chart 2 — Patient vs Staff (Pie)
+      const popCtx = document.getElementById("populationPie").getContext("2d");
+      new Chart(popCtx, {
+        type: "pie",
+        data: {
+          labels: ["Patients", "Staff"],
+          datasets: [{
+            data: [patients, staff],
+            backgroundColor: ["rgba(124,58,237,0.88)", "rgba(245,158,11,0.88)"],
+            borderColor: "rgba(255,255,255,0.85)",
+            borderWidth: 2,
+            hoverOffset: 10,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 10 } },
+            tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.parsed}` } },
+          },
+        },
+      });
+
+      // Chart 3 — Department Efficiency (Bar)
+      const deptCtx = document.getElementById("deptBar").getContext("2d");
+      new Chart(deptCtx, {
+        type: "bar",
+        data: {
+          labels: deptLabels,
+          datasets: [
+            {
+              label: "Doctor Workload (patients per doctor)",
+              data: deptWorkload.map((v) => +v.toFixed(2)),
+              borderWidth: 0,
+              borderRadius: 14,
+              maxBarThickness: 52,
+              backgroundColor: "rgba(34,197,94,0.90)",
+              yAxisID: "yWork",
+            },
+            {
+              label: "Bed Occupancy Rate (%)",
+              data: deptBedOcc.map((v) => +v.toFixed(1)),
+              borderWidth: 0,
+              borderRadius: 14,
+              maxBarThickness: 52,
+              backgroundColor: "rgba(245,158,11,0.90)",
+              yAxisID: "yOcc",
+            }
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: "bottom" },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  if (ctx.datasetIndex === 0) {
+                    return ` ${ctx.parsed.y} patients/doctor`;
+                  }
+                  return ` ${ctx.parsed.y}% occupied`;
+                }
+              }
+            },
+          },
+          scales: {
+            x: { grid: { display: false } },
+            yWork: {
+              type: "linear",
+              position: "left",
+              beginAtZero: true,
+              grid: { color: "rgba(15,23,42,0.08)" },
+              title: { display: true, text: "Patients per Doctor (DW)" }
+            },
+            yOcc: {
+              type: "linear",
+              position: "right",
+              beginAtZero: true,
+              max: 100,
+              grid: { drawOnChartArea: false },
+              ticks: { callback: (v) => v + "%" },
+              title: { display: true, text: "Bed Occupancy Rate (BOR)" }
+            },
+          },
+        },
+      });
+
+      // Chart 5 — Predicted Patient Requests (Line)
+      const predCtx = document.getElementById("predictLine").getContext("2d");
+      new Chart(predCtx, {
+        type: "line",
+        data: {
+          labels: predictLabels,
+          datasets: [{
+            label: "Patients",
+            data: predictValues,
+            tension: 0.35,
+            fill: true,
+            borderWidth: 3,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            borderColor: "rgba(124,58,237,0.95)",
+            pointBackgroundColor: "rgba(245,158,11,0.95)",
+            backgroundColor: (context) => {
+              const { chart } = context;
+              const { ctx, chartArea } = chart;
+              if (!chartArea) return "rgba(124,58,237,0.12)";
+              const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+              g.addColorStop(0, "rgba(124,58,237,0.22)");
+              g.addColorStop(1, "rgba(59,130,246,0.06)");
+              return g;
+            },
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx) => ` ${ctx.parsed.y} patients` } },
+          },
+          scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true, grid: { color: "rgba(15,23,42,0.08)" }, ticks: { stepSize: 10 } },
+          },
+        },
+      });
+
+      // Nurse count chip (15 staff visualisation)
+      const nurseCountChip = document.getElementById("nurseCountChip");
+      if (nurseCountChip) {
+        nurseCountChip.textContent = String(nurses.length);
+      }
+
+      // --- AI Insights, alerts, and staff allocation (Steps 5–7, 10) ---
+      // Imbalance messaging
+      const overloadThresholdDW = 15; // DW > 15 => overloaded
+      const overloadThresholdBOR = 85; // BOR > 85% => bed capacity alert
+      const waitingThreshold = 30; // AWT > 30 => waiting time alert
+
+      const overloadedDepts = departments.filter((_, idx) => deptWorkload[idx] > avgWorkload);
+      const underUtilizedDepts = departments.filter((_, idx) => deptWorkload[idx] < avgWorkload);
+
+      const aiImbalanceMsg = document.getElementById("aiImbalanceMsg");
+      if (overloadedDepts.length) {
+        const names = overloadedDepts.map((d) => d.name).join(", ");
+        aiImbalanceMsg.textContent = `Workload imbalance detected – overloaded: ${names}.`;
+      } else {
+        aiImbalanceMsg.textContent = "No major workload imbalance detected across departments.";
+      }
+
+      // Best dept: lowest DW & reasonable occupancy
+      let bestIdx = 0;
+      deptWorkload.forEach((dw, idx) => {
+        if (dw < deptWorkload[bestIdx]) bestIdx = idx;
+      });
+      document.getElementById("aiBestDeptMsg").textContent =
+        `${departments[bestIdx].name} has the best balance – ` +
+        `${deptWorkload[bestIdx].toFixed(2)} patients/doctor, ` +
+        `${deptBedOcc[bestIdx].toFixed(1)}% bed occupancy.`;
+
+      // "Lowest efficiency" = highest BOR
+      let worstOccIdx = 0;
+      deptBedOcc.forEach((bor, idx) => {
+        if (bor > deptBedOcc[worstOccIdx]) worstOccIdx = idx;
+      });
+      document.getElementById("aiLowEffDeptMsg").textContent =
+        `${departments[worstOccIdx].name} close to bed capacity – ` +
+        `${deptBedOcc[worstOccIdx].toFixed(1)}% occupancy.`;
+
+      // Staff counts + alerts
+      document.getElementById("aiPendingCount").textContent = String(pendingRequests);
+      document.getElementById("aiStaffNurses").textContent = String(nurses.length);
+      document.getElementById("aiStaffDoctors").textContent = String(totalDoctors);
+
+      const alertList = document.getElementById("alertList");
+      function pushAlert(text) {
+        const li = document.createElement("li");
+        li.textContent = text;
+        alertList.appendChild(li);
+      }
+
+      // Department overload / underutilization & RD
+      departments.forEach((dept, idx) => {
+        const dw = deptWorkload[idx];
+        const bor = deptBedOcc[idx];
+        const is = deptImbalance[idx];
+        const rd = deptRequiredDoctors[idx];
+        const need = deptDoctorsNeeded[idx];
+
+        if (dw > overloadThresholdDW) {
+          pushAlert(
+            `${dept.name}: Doctor workload high at ${dw.toFixed(2)} patients/doctor ` +
+            `(IS = ${is.toFixed(2)}). Needs about ${Math.round(rd)} doctors ` +
+            `(${need} more than current).`
+          );
+        }
+        if (bor > overloadThresholdBOR) {
+          pushAlert(
+            `${dept.name}: Bed occupancy high at ${bor.toFixed(1)}% – consider diverting admissions.`
+          );
+        }
+      });
+
+      if (hospitalAvgWait > waitingThreshold) {
+        pushAlert(
+          `Hospital‑wide waiting time high: ${hospitalAvgWait.toFixed(1)} minutes ` +
+          `(threshold ${waitingThreshold} minutes).`
+        );
+      }
+
+      // Simple staff reallocation suggestion:
+      // Move doctors from most underutilized to most overloaded department.
+      if (overloadedDepts.length && underUtilizedDepts.length) {
+        let maxOverIdx = 0;
+        deptWorkload.forEach((dw, idx) => {
+          if (dw > deptWorkload[maxOverIdx]) maxOverIdx = idx;
+        });
+        let minUnderIdx = 0;
+        deptWorkload.forEach((dw, idx) => {
+          if (dw < deptWorkload[minUnderIdx]) minUnderIdx = idx;
+        });
+        const overloadedDept = departments[maxOverIdx];
+        const underDept = departments[minUnderIdx];
+        const needed = deptDoctorsNeeded[maxOverIdx];
+        if (needed > 0) {
+          pushAlert(
+            `Recommendation: Move ${Math.min(2, needed)} doctor(s) from ` +
+            `${underDept.name} to ${overloadedDept.name} to balance workload.`
+          );
+        }
+      }
+
+      // Top‑level "Available Staff" stat
+      document.getElementById("availableStaffStat").textContent = String(availableStaff);
+
+      // Prediction text
+      document.getElementById("predictedPatientsText").textContent =
+        Math.round(predictedPatients).toString();
+
+      // Heatmap grid (HTML “heatmap style”)
+      const heatmapGrid = document.getElementById("heatmapGrid");
+      function riskCategory(name, handled) {
+        // Explicit callouts per prompt:
+        if (name === "Kavitha" || name === "Priya") return "overworked";
+        if (name === "Revathi" || name === "Nithya") return "low";
+        // Otherwise infer:
+        if (handled >= 18) return "overworked";
+        if (handled < 10) return "low";
+        return "balanced";
+      }
+      function riskLabel(cat) {
+        if (cat === "overworked") return "High workload";
+        if (cat === "low") return "Low workload";
+        return "Balanced";
+      }
+      nurses.forEach((n, idx) => {
+        const handled = workload[idx];
+        const cat = riskCategory(n, handled);
+        const tile = document.createElement("div");
+        tile.className = `heat ${cat}`;
+        tile.innerHTML = `
+          <p class="name">${n}</p>
+          <span class="tag"><i class="fa-solid fa-fire-flame-curved" style="opacity:.75"></i>${riskLabel(cat)}</span>
+          <div style="margin-top:10px;font-size:12px;color:rgba(15,23,42,0.70);font-weight:900;">Requests: ${handled}</div>
+        `;
+        heatmapGrid.appendChild(tile);
+      });
+
+      // Report generator (downloads TXT)
+      function buildReportText() {
+        return [
+          "CARE+ Hospital – Administrative Analytics Dashboard",
+          "Hospital Activity Report – March 6",
+          "----------------------------------------------",
+          "Total Requests : 240",
+          "Resolved       : 200",
+          "Pending        : 40",
+          "",
+          "Peak Time           : 11 AM",
+          "Best Department     : Emergency",
+          "Lowest Efficiency   : Pharmacy",
+          "",
+          "AI Hospital Insights:",
+          "- Workload imbalance detected (assign more requests to Revathi and Nithya).",
+          "- Emergency department performing best.",
+          "- Pharmacy efficiency below average.",
+          "",
+          `Generated at: ${new Date().toLocaleString()}`,
+        ].join("\n");
+      }
+
+      document.getElementById("generateReport").addEventListener("click", () => {
+        const text = buildReportText();
+        const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "CARE+_Hospital_Report_March_6.txt";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showToast("Report generated", "Downloaded: CARE+_Hospital_Report_March_6.txt");
+      });
+    </script>
+  </body>
+</html>
